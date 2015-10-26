@@ -1,0 +1,24 @@
+Test Cases for PA4
+Jimmy Le (jl1415)
+Carlos Dominguez (cmd363)
+
+*Output (in regards to our main.c file)
+
+1. Input:
+   Output:
+2. Input:
+   Output:
+3. Input:
+   Output:
+4. Input:
+   Output:
+5. Input:
+   Output:
+6. Input:
+   Output:
+7. Input:
+   Output:
+8. Input:
+   Output:
+9. Input:
+   Output:

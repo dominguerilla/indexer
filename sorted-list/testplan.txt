@@ -1,0 +1,144 @@
+testplan.txt
+Jimmy Le - jl1415
+Carlos Dominguez - cmd363
+
+pa2
+
+Test Cases:
+
+1.INPUT:
+	1
+	2
+	3
+	4
+	5
+	6
+	7
+ OUTPUT:
+	7
+	6
+	5
+	4
+	3
+	2
+	1
+
+2.INPUT:
+	1
+	2
+	2
+	2
+	3
+	4
+	5
+	6
+	7
+	8
+	9
+	9
+ OUTPUT:
+	9
+	9
+	8
+	7
+	6
+	5
+	4
+	3
+	2
+	2
+	2
+	1
+
+3.INPUT:
+	7
+	3
+	8
+	5
+	2
+	4
+	2
+	1
+	7
+	9
+	4
+	6
+	6
+	8
+	3
+	6
+	9
+	3
+ OUTPUT:
+	9
+	9
+	8
+	8
+	7
+	7
+	6
+	6
+	6
+	5
+	4
+	4
+	3
+	3
+	3
+	2
+	2
+	1
+
+4. INPUT:
+	1
+	2
+	3
+	4
+	7
+	8
+	9
+	111111
+   OUTPUT:
+	111111
+	9
+	8
+	7
+	4
+	3
+	2
+	1
+
+5. INPUT:
+	1
+	2
+	3
+	4
+	5
+  OUTPUT:
+  	5
+  	4
+  	3
+  	2
+  	1
+
+6. INPUT:
+	a
+	b
+	c
+   OUTPUT:
+   	c
+   	b
+   	a
+
+7. INPUT:
+	a
+	b
+	b
+	a
+	a
+  OUTPUT:
+  	b
+  	b
+  	a
+  	a
+  	a

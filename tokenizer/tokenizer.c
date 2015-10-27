@@ -458,7 +458,9 @@ char* wordToken(TokenizerT* tk) {
     while (tk->cursorPosition < tk->tokenLength && !isspace(string[tk->cursorPosition])) {
 
         char c = string[tk->cursorPosition];
-        char d = string[tk->cursorPosition+1];
+        
+	/*
+	char d = string[tk->cursorPosition+1];
         char e = string[tk->cursorPosition+2];
         char f = string[tk->cursorPosition+3];
         char g = string[tk->cursorPosition+4];
@@ -467,7 +469,7 @@ char* wordToken(TokenizerT* tk) {
         char j = string[tk->cursorPosition+7];
         char k = string[tk->cursorPosition+8];
         char l = string[tk->cursorPosition+9];
-        
+        */
         if(isalpha(c) || (isalnum(c) && !isFirstChar)){
 
            /** if ( ((c == '\n')) || (d == 't') || (d == 'v') || (d == 'f') || (d == 'r') ){ // Words are alphabetic followed by alphanumeric.
@@ -478,8 +480,7 @@ char* wordToken(TokenizerT* tk) {
                 return NULL;
             }
             
-            /*EXTRA CREDIT FUNCTION (1): Looks for distinct C Keywords, and prints them out with a message*/
-
+            /*EXTRA CREDIT FUNCTION (1): Looks for distinct C Keywords, and prints them out with a message
             if  (isFirstChar && c == 'a' && d == 'u' && e == 't' && f == 'o' && (g == ' ' || g =='\0')){
                 isFirstChar = 0;
                 token = malloc(strlen("DISTINCT C TOKEN \"") + 1);
@@ -540,9 +541,9 @@ char* wordToken(TokenizerT* tk) {
                 isFirstChar = 0;
                 token = malloc(strlen("DISTINCT C TOKEN \"") + 1);
                 strncpy(token, "DISTINCT C TOKEN \"", strlen("DISTINCT C TOKEN \"") + 1);
-            
-            /*Main method for differentiating between Words*/
-            }else if (isFirstChar) {
+            */
+	    /*Main method for differentiating between Words*/
+            if (isFirstChar) {
                 isFirstChar = 0;
                 token = malloc(strlen("word \"") + 1);
                 strncpy(token, "word \"", strlen("word \"") + 1);

@@ -1,6 +1,6 @@
 CC=gcc
 LIBS=-lm
-FLAGS=-Wall
+FLAGS=-Wall -g
 
 OBJ=tokenizer.c
 HDR=tokenizer.h

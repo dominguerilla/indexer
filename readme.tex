@@ -1,5 +1,5 @@
 \documentclass{article}
-\title{ Error Detecting Malloc() and Free() Project Documentation\\}
+\title{Project 4: Indexer\\}
 \date{}
 \author{Jimmy Le$^{1}$, Carlos Dominguez$^{2}$\\
 	Rutgers University\\
@@ -33,32 +33,37 @@
 \begin{document}
 \maketitle
 
-\section{Error Detecting Malloc() and Free()}
-For this project, we have created three files, main.c, malloc-free.c, and malloc-free.h, that will take care of error checking for memory usage and memory leakage for any data set
-and any number of inputs from the program.
+\section{Description}
+Our implementation of the Indexer consists of three components working in conjunction. The entries of tokens returned by our indexer are stored in memory as a massive linked list, which is kept sorted and alphabetized.
+\\
+\\
+The Indexer runs in O(n$^2$) time--it runs through the input from the user linearly, iterates over the linked list stored in memory to ensure that new entries are placed in the proper place, and then writes each entry to file.
 
-\section{Functions}
-*We have identified some of the core components of our implementation for the program.
+\section{Tokenizer}
+Finds the discrete tokens in a given file and stores them into a linked list. Our improved tokenizer file has been stripped of features unnecessary for the indexer, such as the C keyword detection system and the token 'type' identifier. Much of the algorithm had to be rewritten in order to accommodate these changes, but the end result is a modular, minimalistic library suitable for use in larger programs like our indexer. 
+\\
+\\
+We have some new functionality in our tokenizer, such as converting characters into their hexadecimal/octodecimal equivalents, and checking whether or not a given token is an octodecimal string.
 
-\section {malloc-Free.c}
+\section{index.h}
+This file contains the function definitions required to call the Tokenizer on a given file or directory. It is also responsible for placing new entries in alphabetical order.
 
-\subsection*{allocate(int size, char IS\_LARGE)}
-For this method, we first receive an input from the user, and check with a message from the user if the input is large (usually referred to as a n for no or y for yes.  If n, then we go over with an array to track the array size and check for the chunk of memory that we will create for the input. Once the tracking is done, and we allocated the space, we return size.  If IS\_LARGE is not n, then we still track for the array location and its input with a char array, but its not at the beginning of our tracking system.
-The run time analysis regards to this method is O(n) depending on the initial input by the user. 
+\subsection*{evalFile()}
+Called upon every file that is found in the input directories, this function uses the Tokenizer to tokenize a file and then stores every valid token in a linked list. When finding a token for the first time, an entry in the list is initialized with the token, the filename it is found in, and the number of times it is found in the file (initially 1). 
+\\
+\\
+If this token is found again, the entry is instead updated, and is done so in two cases:
+\begin{enumerate}
+\item If the token is found again in the same file, the number of occurrences is incremented
+\item If the token is found again in a different file, a new sub-entry is created, with the same token but with this current filename and the number of occurrences in this file
+\end{enumerate}
+\subsection*{writeFile()}
+Taking the entire linked list of tokens created by running evalFile(), writeFile() writes the entire list into file.
 
-\subsection*{my\_malloc(size\_t t)}
-For this method, we initially error check for the following cases such as checking for maximum memory usage (out of memory), and not enough memory for the allocation process.  Each "not enough memory.." error checks using different methods such as too big allocation, too small memory size or too large memory to allocate.
-The run time analysis regards to this method is 0(n) depending on the users size\_ t of t.
-
-\subsection*{my\_free(void* ptr)}
-Initially notifies the user of the address of the ptr and the address of the memory, depending on the input.  We also error check for the size\_ of\_ chunk array and the is\_ alloc array.  Once all error checking is finished, this method will create an offset for memory to be used as a tracking system for the array.  The run time analysis of this method is 0(n$^2$) depending on the array and pointer.
-
-\subsection*{print\_memory()}
-This is user created, and all it does is print out the memory's size, and the is\_ alloc: characters in the array, and size\_ of\_ chunk: decimals of the array.
-This runs at a 0(n) time for printing, for all arrays.
-
-
-\section{Using Our Test Cases}
-To use our test cases, run either 'make prog1' or 'make prog2'. ./prog1 will run the test cases checking the errors outlined in the PDF--freeing unmalloc'd pointers, freeing an offset of a malloc'd pointer, and repeatedly freeing a pointer. All three cases work just fine. The second case, testing out data fragmentation, works as expected in fragmentation handling, but for some reason is not able to free the second pointer. We suspect a one-off error that may manifest itself in further testing.
+\section{index.c}
+Processes the input from the user specifying where the list of tokens should be saved to, as well as the directory or file to tokenize. It then calls the functions found in index.h on this input, which is able to recursively tokenize all files in any subdirectories in an inputted directory.
+\\
+\\
+After the files have been tokenized and stored into memory, writeFile() is called, saving the entire output to local storage. The monolithic linked list of entries is then freed.
 
 \end{document}

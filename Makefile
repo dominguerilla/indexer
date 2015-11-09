@@ -1,22 +1,22 @@
-TARGET=proj3
-FLAGS=-g -Wall
-LIBS=-lm
+TARGET= index
+FLAGS=-ansi -pedantic -g -Wall
 CC=gcc
 
 default: $(TARGET)
 all: default
 
-OBJ=$(patsubst %.c, %.o, $(wildcard *.c))
-HDR=$(wildcard *.h)
 
-%.o: %.c $(HDR)
-	$(CC) $(FLAGS) -c $< -o $@
+index.o: index.c index.h tokenizer.h
+	$(CC) $(FLAGS) -c index.c index.h tokenizer.h
 
-.PRECIOUS: $(TARGET) $(OBJ)
+tokenizer.o: tokenizer.c tokenizer.h
+	$(CC) $(FLAGS) -c tokenizer.c tokenizer.h
 
-$(TARGET): $(OBJ)
-	$(CC) $(OBJ) -g -Wall $(LIBS) -o $@
+$(TARGET): index.o tokenizer.o
+	$(CC) $(FLAGS) -o index index.o tokenizer.o
 
 clean:
 	-rm -f *.o
 	-rm -f $(TARGET)
+	-rm -f *~
+	-rm -f *.h.gch

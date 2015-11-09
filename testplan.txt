@@ -2,23 +2,32 @@ Test Cases for PA4
 Jimmy Le (jl1415)
 Carlos Dominguez (cmd363)
 
-*Output (in regards to our main.c file)
+*Files from the tests used are included in testplan-files folder
+*The results come from the use of our main file indexer
 
-1. Input:
+1. Input: A cat name Baa
    Output:
-2. Input:
+
+2. Input: A dog name name Boo
    Output:
-3. Input:
+
+3. Input: Carlos is so cool he likes apples
    Output:
-4. Input:
+
+4. Input: hello hello hello megatron out
    Output:
-5. Input:
+
+5. Input: Would you like a jelly baby
    Output:
+
 6. Input:
    Output:
+
 7. Input:
    Output:
+
 8. Input:
    Output:
+
 9. Input:
    Output:

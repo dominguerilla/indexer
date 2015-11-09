@@ -1,250 +1,124 @@
-//JIMMY LE          jl1415
-//CARLOS DOMINGUEZ  cmd363
-/*
+/*JIMMY LE          jl1415
+ *CARLOS DOMINGUEZ  cmd363
+ *
  * tokenizer.c
  */
 
+
 #include "tokenizer.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
 
-int const TOKEN_TYPE_OFFSET = 10;
-static int ecounter = 0;
-static int andCounter = 0;
-static int orCounter = 0;
-static int rightcounter = 0;
-static int leftcounter = 0;
+struct TokenizerT_ {
+
+	/*const char * tokenString;
+	unsigned long cursorPosition;
+	unsigned long tokenLength;*/
+
+	char* nextToken;
+	char* delimiters;		
+	char* cursorPosition;
+};
 
 
-/*
- * charToString will return a string that is the concatenation of the string a and the character c.
- */
+char isEscapeToken(char character) {
 
-char* charToString(const char* a, char c)
-{
-    size_t len = strlen(a) + 1 + 1; // 1 for character and 1 for null terminator.
-
-    char *retStr;
-
-    if (a == NULL || (retStr = malloc(len)) == NULL) { // Checks for enough memory to be used.
-        return NULL;
-    }
-
-    sprintf(retStr, "%s%c", a, c); 
-    return retStr;
+	char* escapeToken = "ntvbrfa\\?'\"";
+	char* escapeChars = "\n\t\v\b\r\f\a\\\?\'\"";
+	int offset = 0;
+	
+	for(offset = 0; offset < strlen(escapeToken); offset++) {
+		if(*(escapeToken + offset) == character) {
+			return *(escapeChars + offset);
+		}
+	}
+	
+	return 0;
 }
 
-/*
- * toString will return a string that is the concatenation of a and b. 
- */
+int HexConverter(char character) {
 
-char* toString(const char* a, const char* b)
-{
-    size_t len = strlen(a) + strlen(b) + 1;
-    char *retStr = malloc(len);
+	
+	if(isdigit(character)){
+		return character - '0';
+	} else if (islower(character)){
+		return character - 'a' + 10;
+	} else {
+		return character - 'A' + 10;
+	}
+} 
+ 
+int OctConverter(char character) {
 
-    sprintf(retStr, "%s%s", a, b);
-    return retStr;
+
+	return character - '0';
+} 
+ 
+int isOctToken(char oct_digit) {
+	
+	if(oct_digit >= '0' && oct_digit <= '7') {
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
-/*
- * numToken evaluates each numerical input from string, and checks for each specification to see
- * if the input belongs numerically to a certain identification such as octal, float, decimal, and hex.
- */
-char* numToken(TokenizerT* tk) 
-{
-    const char *string = tk->tokenString;
-
-    if (isspace(string[tk->cursorPosition])) {
-        return NULL;
-    }
-
-    int isFirstChar = 1;
-    int isSecondChar = 1;
-    int period = 0;
-    int isE = 0;
 
 
-    char numeric = 'r'; // d - decimal, o - octal, x - hex, f - float, z - zero, r - Error.  Defaults to Zero.
-    char *number = malloc(tk->tokenLength + 1);
 
+char* stringToken(char* string) {
 
-    int i = 0;
-    while (tk->cursorPosition < tk->tokenLength && !isspace(string[tk->cursorPosition])) {
-        char c = string[tk->cursorPosition];
-
-        if(isdigit(c) && isFirstChar) { //First char is a digit & its the first
-            number[i] = c;
-            if (c != '0'){
-                numeric = 'd';    //If isdigit and isFirstchar not being 0 then its a decimal.
-            }else {
-                numeric = 'z';
-            }      
-            if(c == '0'){       //If it is zero, then it is hex.
-                numeric = 'x';
-                char d = string[tk->cursorPosition+1];
-                char e = string[tk->cursorPosition+2];
-
-
-                if (d == ' '){           //Else if it is a white space, then it is zero.
-                    numeric = 'd';
-                }else if (d != 'x' && d != 'X'){    //Else if there is no x after 0, then it is octal.
-                    numeric = 'o';
-                }else if (d == 'x' && d == 'X' && e != '\\'){
-                    numeric = 'x';
-                }else if ((d != 'x' && d != 'X' && d == '8') || (d != 'x' && d != 'X' && d == '9') || (d != 'x' && d != 'X' && e == '\\')){
-                    numeric = 'r';
-                }
-            }
-            isFirstChar = 0;
-            i++;
-            tk->cursorPosition++;
-
-        } else if((!isFirstChar && isalnum(c)) || (!isFirstChar && c == '.') || (!isFirstChar && c == '-') ){ //not first and its alphanumeric
-
-
-            if ((c == 'x' || c == 'X') && isSecondChar && numeric == 'x'){
-                isSecondChar = 0;
-                number[i] = c;
-                i++;
-                tk->cursorPosition++;
-                continue;
-            }
-
-
-            if (numeric == 'x' && ((c >= 65 && c <=70) || (c >= 97 && c <= 102) || isdigit(c))){
-                number[i] = c;
-                i++;
-                tk->cursorPosition++;
-                continue;
-            } else if(numeric == 'x' && isalpha(c)) {
-                break;
-            }
-
-
-            if (numeric != 'x' && !period && c == '.'){
-                numeric = 'f';
-                period = 1;
-                number[i] = c;
-                i++;
-                tk->cursorPosition++;
-                continue;
-            }
-
-
-            if (numeric == 'f' && isE && isalpha(c)){
-                break;
-            }
-
-
-            if ((numeric == 'f' && period && isdigit(c)) || (numeric == 'f' && period && (c == 'e' || c == 'E'))){
-
-
-                if(c == 'e' || c == 'E') {
-                    char u = string[tk->cursorPosition+1];
-                    if (isalpha(u)){
-                        break;
-                    }
-                    isE = 1;
-                }
-                number[i] = c;
-                i++;
-                tk->cursorPosition++;
-                continue;
-            }
-
-
-            if (numeric == 'f' && c == '-' && isE){
-                number[i] = c;
-                i++;
-                tk->cursorPosition++;
-                continue;
-            } else if (numeric != 'f' && c == '-'){
-                break;
-            }
-
-
-            if (numeric == 'o' && c <= 55 && isdigit(c)){
-                number[i] = c;
-                i++;
-                tk->cursorPosition++;
-                continue;
-            } else if (numeric == 'o' && isdigit(c)){
-                //numeric = 'd';
-                number[i] = c;
-                i++;
-                tk->cursorPosition++;
-                continue;
-            } 
-
-            if (numeric == 'd' && isdigit(c) ){
-                number[i] = c;
-                i++;
-                tk->cursorPosition++;
-                continue;
-            }
-
-            break;
-
-        } else {
-            numeric = 'r';
-            return NULL; // Not a numeric.
-        }
-    }
-
-
-    number[i] = '\0';
-
-
-    char *retStr = NULL;	//Checks and Return correct numeric value with correct specification.
-    switch(numeric) {
-        /*case 'z':
-            retStr = malloc(strlen(number) + strlen("zero \"" + 2));
-            strcpy(retStr, "decimal constant \"");
-            strcat(retStr, number);
-            break;*/
-        case 'o':
-            retStr = malloc(strlen(number) + strlen("octal constant \"" + 2));
-            strcpy(retStr, "octal constant \"");
-            strcat(retStr, number);
-            break;
-        case 'd':
-            retStr = malloc(strlen(number) + strlen("decimal constant \"" + 2));
-            strcpy(retStr, "decimal constant \"");
-            strcat(retStr, number);
-            break;
-        case 'x':
-            retStr = malloc(strlen(number) + strlen("hex constant \"" + 2));
-            strcpy(retStr, "hex constant \"");
-            strcat(retStr, number);
-            break;
-        case 'f':
-            retStr = malloc(strlen(number) + strlen("float constant \"" + 2));
-            strcpy(retStr, "float constant \"");
-            strcat(retStr, number);
-            break;
-        case 'r':
-            retStr = malloc(strlen(number) + strlen("Error \"" + 2));
-            strcpy(retStr, "Error \"");
-            strcat(retStr, number);
-            break;
-    }
-
-    strcat(retStr, "\"");
-
-    return retStr;
+	char* stToken = (char*)malloc(strlen(string) * sizeof(char) + 1);
+	int cursorPosition = 0;
+	int stCount = 0;
+	unsigned char escapeChar = 0;	
+	
+	for(cursorPosition = 0; cursorPosition < strlen(string); cursorPosition++) {	
+			escapeChar = *(string + cursorPosition);
+			if(*(string + cursorPosition) == '\\') {
+				if(*(string + cursorPosition + 1) == 'x') {
+					cursorPosition++;
+					int hexCount;
+					escapeChar = 0;
+					for(hexCount = 1; hexCount <= MAX_HEX_CHARS; hexCount++) {
+						if(!isxdigit(*(string + cursorPosition + hexCount))) {
+							break;
+						}
+						escapeChar = escapeChar * 16 + HexConverter(*(string + cursorPosition + hexCount));
+					}
+					hexCount--;
+					cursorPosition += hexCount;
+				} else if(isOctToken((*(string + cursorPosition + 1))) == 1) {
+					int octCount;
+					escapeChar = 0;
+					for(octCount = 1; octCount <= MAX_OCT_CHARS; octCount++) {
+						if(isOctToken(*(string + cursorPosition + octCount)) == 0) {
+							break;
+						}
+						escapeChar = escapeChar * 8 + OctConverter(*(string + cursorPosition + octCount));
+					}
+					cursorPosition += octCount;
+				} else {
+					escapeChar = isEscapeToken(*(string + cursorPosition + 1));
+					
+					if(escapeChar == 0) {
+						escapeChar = *(string + cursorPosition);
+					} else {
+						cursorPosition++;
+					}
+				}
+			}
+			*(stToken + stCount) = escapeChar;
+			stCount++;
+			escapeChar = 0;
+	}
+	
+	*(stToken + stCount) = '\0';
+	
+	return stToken;
 }
 
-/*
- * operatorToken checks for special characters and operators, which if there does exist in the input, it will return an error message
- * with correct hex represenation.
- */
-char* operatorToken(TokenizerT* tk) {
-
-
-    const char *string = tk->tokenString;
+char operatorToken(char character, char* delimiters) {
+	
+	/*const char *string = tk->tokenString;
 
 
     if (isspace(string[tk->cursorPosition])) {
@@ -261,18 +135,18 @@ char* operatorToken(TokenizerT* tk) {
 
 
     if (retStr != NULL) {
-        tk->cursorPosition += 3; // Move the cursor by 3.
+        tk->cursorPosition += 3; 
         return retStr;
     }
 
     if (retStr != NULL) {
-        tk->cursorPosition += 2; // Move the cursor by 2.
+        tk->cursorPosition += 2; 
         return retStr;
     }
 
-    switch(token[0]) {	//Checks and Returns Error Message with Escape Operators or Certain Special Characters with Hex Identification.
+    switch(token[0]) {	
         case '(':
-            retStr = "left parenthesis \"(\""; //This was the orignal return statement
+            retStr = "left parenthesis \"(\""; 
             break;
         case ')':
             retStr = "right parenthesis \")\"";
@@ -429,23 +303,243 @@ char* operatorToken(TokenizerT* tk) {
             if ((token[1] == 't') || (token[1] == 'v') || (token[1] == 'f') || (token[1] == 'r') || (token[1] == 'n')){
                 break;
             }
-
-
     } 
 
     if (retStr != NULL) {
-        tk->cursorPosition++; // Increment the cursor.
+        tk->cursorPosition++; 
+    }*/
+
+
+
+	char* current = NULL;
+	
+	for(current = delimiters; current - delimiters < strlen(delimiters); current++) {
+		if(character == *current) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+
+/*
+ * charToString will return a string that is the concatenation of the string a and the character c.
+ */
+
+/*char* charToString(const char* a, char c)
+{
+    size_t len = strlen(a) + 1 + 1; // 1 for character and 1 for null terminator.
+
+    char *retStr;
+
+    if (a == NULL || (retStr = malloc(len)) == NULL) { // Checks for enough memory to be used.
+        return NULL;
     }
 
+    sprintf(retStr, "%s%c", a, c); 
     return retStr;
 }
 
+
 /*
- * wordToken checks for words in string.  Pointer checks each individual character and prints out the entire word until white space.
- * Also contains the extra credit method (1) to identify DISTINCT C TOKENS
+ * toString will return a string that is the concatenation of a and b. 
  */
 
-char* wordToken(TokenizerT* tk) {
+/*char* toString(const char* a, const char* b)
+{
+    size_t len = strlen(a) + strlen(b) + 1;
+    char *retStr = malloc(len);
+
+    sprintf(retStr, "%s%s", a, b);
+    return retStr;
+}
+
+
+/*
+ * numToken evaluates each numerical input from string, and checks for each specification to see
+ * if the input belongs numerically to a certain identification such as octal, float, decimal, and hex.
+ */
+/*char* numToken(TokenizerT* tk) 
+{
+    const char *string = tk->tokenString;
+
+    if (isspace(string[tk->cursorPosition])) {
+        return NULL;
+    }
+
+    int isFirstChar = 1;
+    int isSecondChar = 1;
+    int period = 0;
+    int isE = 0;
+
+
+    char numeric = 'r'; // d - decimal, o - octal, x - hex, f - float, z - zero, r - Error.  Defaults to Zero.
+    char *number = malloc(tk->tokenLength + 1);
+
+
+    int i = 0;
+    while (tk->cursorPosition < tk->tokenLength && !isspace(string[tk->cursorPosition])) {
+        char c = string[tk->cursorPosition];
+
+        if(isdigit(c) && isFirstChar) { //First char is a digit & its the first
+            number[i] = c;
+            if (c != '0'){
+                numeric = 'd';    //If isdigit and isFirstchar not being 0 then its a decimal.
+            }else {
+                numeric = 'z';
+            }      
+            if(c == '0'){       //If it is zero, then it is hex.
+                numeric = 'x';
+                char d = string[tk->cursorPosition+1];
+                char e = string[tk->cursorPosition+2];
+
+
+                if (d == ' '){           //Else if it is a white space, then it is zero.
+                    numeric = 'd';
+                }else if (d != 'x' && d != 'X'){    //Else if there is no x after 0, then it is octal.
+                    numeric = 'o';
+                }else if (d == 'x' && d == 'X' && e != '\\'){
+                    numeric = 'x';
+                }else if ((d != 'x' && d != 'X' && d == '8') || (d != 'x' && d != 'X' && d == '9') || (d != 'x' && d != 'X' && e == '\\')){
+                    numeric = 'r';
+                }
+            }
+            isFirstChar = 0;
+            i++;
+            tk->cursorPosition++;
+
+        } else if((!isFirstChar && isalnum(c)) || (!isFirstChar && c == '.') || (!isFirstChar && c == '-') ){ //not first and its alphanumeric
+
+
+            if ((c == 'x' || c == 'X') && isSecondChar && numeric == 'x'){
+                isSecondChar = 0;
+                number[i] = c;
+                i++;
+                tk->cursorPosition++;
+                continue;
+            }
+
+
+            if (numeric == 'x' && ((c >= 65 && c <=70) || (c >= 97 && c <= 102) || isdigit(c))){
+                number[i] = c;
+                i++;
+                tk->cursorPosition++;
+                continue;
+            } else if(numeric == 'x' && isalpha(c)) {
+                break;
+            }
+
+
+            if (numeric != 'x' && !period && c == '.'){
+                numeric = 'f';
+                period = 1;
+                number[i] = c;
+                i++;
+                tk->cursorPosition++;
+                continue;
+            }
+
+
+            if (numeric == 'f' && isE && isalpha(c)){
+                break;
+            }
+
+
+            if ((numeric == 'f' && period && isdigit(c)) || (numeric == 'f' && period && (c == 'e' || c == 'E'))){
+
+
+                if(c == 'e' || c == 'E') {
+                    char u = string[tk->cursorPosition+1];
+                    if (isalpha(u)){
+                        break;
+                    }
+                    isE = 1;
+                }
+                number[i] = c;
+                i++;
+                tk->cursorPosition++;
+                continue;
+            }
+
+
+            if (numeric == 'f' && c == '-' && isE){
+                number[i] = c;
+                i++;
+                tk->cursorPosition++;
+                continue;
+            } else if (numeric != 'f' && c == '-'){
+                break;
+            }
+
+
+            if (numeric == 'o' && c <= 55 && isdigit(c)){
+                number[i] = c;
+                i++;
+                tk->cursorPosition++;
+                continue;
+            } else if (numeric == 'o' && isdigit(c)){
+                //numeric = 'd';
+                number[i] = c;
+                i++;
+                tk->cursorPosition++;
+                continue;
+            } 
+
+            if (numeric == 'd' && isdigit(c) ){
+                number[i] = c;
+                i++;
+                tk->cursorPosition++;
+                continue;
+            }
+
+            break;
+
+        } else {
+            numeric = 'r';
+            return NULL; // Not a numeric.
+        }
+    }
+
+
+    number[i] = '\0';
+
+
+    char *retStr = NULL;	//Checks and Return correct numeric value with correct specification.
+    
+    switch(numeric) {
+        case 'o':
+            retStr = malloc(strlen(number) + strlen("octal constant \"" + 2));
+            strcpy(retStr, "octal constant \"");
+            strcat(retStr, number);
+            break;
+        case 'd':
+            retStr = malloc(strlen(number) + strlen("decimal constant \"" + 2));
+            strcpy(retStr, "decimal constant \"");
+            strcat(retStr, number);
+            break;
+        case 'x':
+            retStr = malloc(strlen(number) + strlen("hex constant \"" + 2));
+            strcpy(retStr, "hex constant \"");
+            strcat(retStr, number);
+            break;
+        case 'f':
+            retStr = malloc(strlen(number) + strlen("float constant \"" + 2));
+            strcpy(retStr, "float constant \"");
+            strcat(retStr, number);
+            break;
+        case 'r':
+            retStr = malloc(strlen(number) + strlen("Error \"" + 2));
+            strcpy(retStr, "Error \"");
+            strcat(retStr, number);
+            break;
+    }
+
+    strcat(retStr, "\"");
+
+    return retStr;
+}*/
+
+/*char* wordToken(TokenizerT* tk) {
 
 
     const char *string = tk->tokenString;
@@ -470,13 +564,13 @@ char* wordToken(TokenizerT* tk) {
         char k = string[tk->cursorPosition+8];
         char l = string[tk->cursorPosition+9];
         */
-        if(isalpha(c) || (isalnum(c) && !isFirstChar)){
+        /*if(isalpha(c) || (isalnum(c) && !isFirstChar)){
 
            /** if ( ((c == '\n')) || (d == 't') || (d == 'v') || (d == 'f') || (d == 'r') ){ // Words are alphabetic followed by alphanumeric.
                 return NULL;
             }**/
 
-            if ( ((c == '\n')) || (c == '\t') || (c == '\v') || (c == '\f') || (c == '\r') ){ // Words are alphabetic followed by alphanumeric.
+            /*if ( ((c == '\n')) || (c == '\t') || (c == '\v') || (c == '\f') || (c == '\r') ){ // Words are alphabetic followed by alphanumeric.
                 return NULL;
             }
             
@@ -543,15 +637,15 @@ char* wordToken(TokenizerT* tk) {
                 strncpy(token, "DISTINCT C TOKEN \"", strlen("DISTINCT C TOKEN \"") + 1);
             */
 	    /*Main method for differentiating between Words*/
-            if (isFirstChar) {
+           /* if (isFirstChar) {
                 isFirstChar = 0;
                 token = malloc(strlen("word \"") + 1);
                 strncpy(token, "word \"", strlen("word \"") + 1);
             }
 
 
-            // Append valid character to the token we're building then update the token string.
-            char *tmp = charToString(token, c);
+            /*Append valid character to the token we're building then update the token string.*/
+            /*char *tmp = charToString(token, c);
             free(token);
             token = malloc(strlen(tmp) + 1);
             strcpy(token, tmp);
@@ -559,13 +653,13 @@ char* wordToken(TokenizerT* tk) {
 
             tk->cursorPosition++;
         } else {
-            break; // Token is malformed.
-        }
+            break; /* Token is malformed.*/
+       /* }
     }
 
 
-    // Append closing quotes to the token output
-    if (token != NULL) {
+    /* Append closing quotes to the token output */
+   /* if (token != NULL) {
         char* tmp = charToString(token, '\"');
         free(token);
         token = malloc(strlen(tmp) + 1);
@@ -574,79 +668,86 @@ char* wordToken(TokenizerT* tk) {
     }
 
     return token;
-}
+}*/
 
-/*
- * TKCreate creates a new TokenizerT object for a given token stream
- * (given as a string).
- * 
- * TKCreate should copy the arguments so that it is not dependent on
- * them staying immutable after returning.  (In the future, this may change
- * to increase efficiency.)
- *
- * If the function succeeds, it returns a non-NULL TokenizerT.
- * Else it returns NULL.
- *
- * You need to fill in this function as part of your implementation.
- */
 
-TokenizerT *TKCreate( char * ts ) {
 
-	if (ts == NULL) { //  Checks for Null input
-        return NULL;
-    }
 
-	TokenizerT * retToken;
-
-    if ((retToken = malloc(sizeof(TokenizerT))) == NULL) { //Validates for memory usage, and bad memory.
-        return NULL;
-    }
-
-    retToken->tokenString = ts;
-    retToken->tokenLength = strlen(ts);
-
-    retToken->cursorPosition = 0;
-    return retToken;
-
-}
-
-/*
- * TKDestroy destroys a TokenizerT object.  It should free all dynamically
- * allocated memory that is part of the object being destroyed.
- *
- * You need to fill in this function as part of your implementation.
- */
-
-void TKDestroy( TokenizerT * tk ) {
-
+void TKDestroy(TokenizerT *tk) {	
+	 
+	/*free(tk->nextToken);*/
+	/*free(tk->delimiters);*/
 	free(tk);
+	
 	return;
 }
 
-/*
- * TKGetNextToken returns the next token from the token stream as a
- * character string.  Space for the returned token should be dynamically
- * allocated.  The caller is responsible for freeing the space once it is
- * no longer needed.
- *
- * If the function succeeds, it returns a C string (delimited by '\0')
- * containing the token.  Else it returns 0.
- *
- * You need to fill in this function as part of your implementation.
- */
 
-char *TKGetNextToken( TokenizerT * tk ) {
 
-	char *token = wordToken(tk);
+char *TKGetNextToken(TokenizerT *tk) {
+	
+	char* token = NULL;
+	char* start = NULL;
 
-    if (token == NULL) {
+    /*if (token == NULL) {
         token = operatorToken(tk);
     }
 
-
     if (token == NULL) {
         token = numToken(tk);
+    }*/
+
+	while(tk->cursorPosition - tk->nextToken < strlen(tk->nextToken)) {
+		if(!operatorToken(*tk->cursorPosition, tk->delimiters)) {
+		
+			start = tk->cursorPosition;
+			break;
+		}
+		tk->cursorPosition++;
+	}
+	
+	if(start == NULL) {
+		return NULL;
+	}
+	
+	while(tk->cursorPosition - tk->nextToken < strlen(tk->nextToken)) {
+		if(operatorToken(*tk->cursorPosition, tk->delimiters)) {
+			break;
+		}
+		tk->cursorPosition++;
+	}	
+
+	token = (char*)malloc(sizeof(char) * (tk->cursorPosition - start + 1));
+	strncpy(token, start, tk->cursorPosition - start);
+	token[(tk->cursorPosition - start)] = '\0';
+	return token;
+}
+
+
+
+TokenizerT *TKCreate(char *sep, char *ts) {
+	 
+	if(sep == NULL || ts == NULL){
+		return NULL;
+	}
+
+	TokenizerT * retToken;
+
+    if ((retToken = malloc(sizeof(TokenizerT))) == NULL) {
+        return NULL;
     }
 
-    return token;
+    /*retToken->tokenString = ts;
+    retToken->tokenLength = strlen(ts);*/
+
+	retToken->delimiters = stringToken(sep);
+	retToken->nextToken = stringToken(ts);
+	retToken->cursorPosition = retToken->nextToken;
+
+	/*retToken->cursorPosition = 0;*/
+
+	return retToken;
 }
+
+
+
